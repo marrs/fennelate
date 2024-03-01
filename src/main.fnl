@@ -15,11 +15,11 @@
                 seval (fennel.eval script)]
             (if seval
               (set sout (.. sout seval))
-              (print "Error: failed to evaluate pre-processor expressions" script))
+              (io.stderr:write "Error: failed to evaluate pre-processor expressions" script))
             (set spos (+ 1 (string.find sin ">" tagidx)))
             (set within-prepro-tag false))
           (do
-            (print "Warning: preprocessor tag not closed before end of file.")
+            (io.stderr:write "Warning: preprocessor tag not closed before end of file.")
             (set sout
                  (.. sout (string.sub sin spos sinlen)))
             (set spos sinlen))))
