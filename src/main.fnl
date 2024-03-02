@@ -32,11 +32,11 @@
                 seval (fennel.eval script preproc-env)]
             (if seval
               (set sout (.. sout seval))
-              (io.stderr:write "Error: failed to evaluate pre-processor expressions" script))
+              (io.stderr:write "Error: failed to evaluate pre-processor expressions" script "\n"))
             (set spos (+ 1 (string.find st ">" tagidx)))
             (set within-prepro-tags? false))
           (do
-            (io.stderr:write "Warning: preprocessor tag not closed before end of file.")
+            (io.stderr:write "Warning: preprocessor tag not closed before end of file.\n")
             (set sout
                  (.. sout (string.sub st spos slen)))
             (set spos slen))))
