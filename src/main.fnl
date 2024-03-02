@@ -1,22 +1,39 @@
 (local fennel (require :fennel))
 
+(fn dirname [s]
+  (let [split (string.find (string.reverse s) "/")]
+    (if split
+      (string.sub s 1 (- 0 split))
+      "")))
+
+(fn extend-tbl [tbl data]
+  (each [ky vl (pairs tbl)]
+        (when (not (?. data ky))
+          (tset data ky vl)))
+  data)
+
+(fn usage []
+  "Usage:\n  fnlate FILENAME\n")
+
 (fn proc-str [st ctx]
   (local context (or ctx {}))
   (local
     preproc-env
     {:env
-     {:load
-      (fn [filename]
-        (with-open [file (io.open filename)]
-          (proc-str (file:read "*all") context)))
-      :def
-      (fn [name val]
+     {:load (fn [filename]
+        (let [filedir (dirname filename)
+              ctxdir (. context :dirname)]
+          (with-open [file (io.open (.. ctxdir filename))]
+            (proc-str (file:read "*all")
+                      (extend-tbl context {:dirname (.. ctxdir filedir)})))))
+
+      :def (fn [name val]
         (tset context name val)
-        ""
-        )
-      :.def
-      (fn [name]
+        "")
+
+      :.def (fn [name]
         (. context name))
+
       : context
       }})
 
@@ -53,4 +70,10 @@
           ))))
   sout)
 
-(print (proc-str (io.stdin:read "*all")))
+(let [filename (. arg 1)]
+  (if (not filename)
+    (do
+      (io.stderr:write "No input file provided\n")
+      (io.stderr:write (usage)))
+    (with-open [fin (io.open filename)]
+      (print (proc-str (fin:read "*all") {:dirname (dirname filename)})))))
