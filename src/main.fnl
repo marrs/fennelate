@@ -1,13 +1,24 @@
 (local fennel (require :fennel))
 
-(fn proc-str [st]
+(fn proc-str [st ctx]
+  (local context (or ctx {}))
   (local
     preproc-env
     {:env
      {:load
       (fn [filename]
         (with-open [file (io.open filename)]
-          (proc-str (file:read))))}})
+          (proc-str (file:read "*all") context)))
+      :def
+      (fn [name val]
+        (tset context name val)
+        ""
+        )
+      :.def
+      (fn [name]
+        (. context name))
+      : context
+      }})
 
   (var sout "")
   (var spos 1)
