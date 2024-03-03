@@ -31,7 +31,7 @@
     public-env
     {:load (fn [filename]
             (let [envdir (. env :dirname)]
-              (with-open [file (io.open (.. envdir filename))]
+              (with-open [file (assert (io.open (.. envdir filename)))]
                 (proc-str (file:read "*all")
                           (extend-tbl env {:dirname (.. envdir (dirname filename))})
                           ctx))))
@@ -84,7 +84,7 @@
     (do
       (io.stderr:write "No input file provided\n")
       (io.stderr:write (usage)))
-    (with-open [fin (io.open filename)]
+    (with-open [fin (assert (io.open filename))]
       (print (proc-str (fin:read "*all")
                        {:dirname (dirname filename)}
                        {})))))
