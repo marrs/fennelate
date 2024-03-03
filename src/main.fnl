@@ -15,28 +15,29 @@
 (fn usage []
   "Usage:\n  fnlate FILENAME\n")
 
-(fn proc-str [st ctx]
-  (local context (or ctx {}))
+(fn proc-str [st env ctx]
   (local
-    preproc-env
-    {:env
-     {:load (fn [filename]
-        (let [filedir (dirname filename)
-              ctxdir (. context :dirname)]
-          (with-open [file (io.open (.. ctxdir filename))]
-            (proc-str (file:read "*all")
-                      (extend-tbl context {:dirname (.. ctxdir filedir)})))))
+    public-env
+    {:load (fn [filename]
+            (let [envdir (. env :dirname)]
+              (with-open [file (io.open (.. envdir filename))]
+                (proc-str (file:read "*all")
+                          (extend-tbl env {:dirname (.. envdir (dirname filename))})
+                          ctx))))
 
-      :def (fn [name val]
-        (tset context name val)
-        "")
+    :def (fn [name val]
+           (tset ctx name val)
+           "")
 
-      :.def (fn [name]
-        (. context name))
+    :.def (fn [name]
+            (. ctx name))
 
-      : context
-      }})
-
+    :log (fn [...]
+           (each [i x (ipairs [...])]
+                 (io.stderr:write x " "))
+           (io.stderr:write "\n"))
+    : env
+    })
   (var sout "")
   (var spos 1)
   (var slen (string.len st))
@@ -46,7 +47,7 @@
       (let [tagidx (string.find st "%s%?>" spos)]
         (if tagidx
           (let [script (string.sub st spos (- tagidx 1))
-                seval (fennel.eval script preproc-env)]
+                seval (fennel.eval script {:env public-env})]
             (if seval
               (set sout (.. sout seval))
               (io.stderr:write "Error: failed to evaluate pre-processor expressions" script "\n"))
@@ -76,4 +77,6 @@
       (io.stderr:write "No input file provided\n")
       (io.stderr:write (usage)))
     (with-open [fin (io.open filename)]
-      (print (proc-str (fin:read "*all") {:dirname (dirname filename)})))))
+      (print (proc-str (fin:read "*all")
+                       {:dirname (dirname filename)}
+                       {})))))
