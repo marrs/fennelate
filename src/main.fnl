@@ -15,6 +15,17 @@
 (fn usage []
   "Usage:\n  fnlate FILENAME\n")
 
+(fn log [...]
+  (each [i x (ipairs [...])]
+                 (io.stderr:write x " "))
+  (io.stderr:write "\n"))
+
+(fn error [...]
+  (log "Error:" ...))
+
+(fn warning [...]
+  (log "Warning:" ...))
+
 (fn proc-str [st env ctx]
   (local
     public-env
@@ -32,10 +43,7 @@
     :.def (fn [name]
             (. ctx name))
 
-    :log (fn [...]
-           (each [i x (ipairs [...])]
-                 (io.stderr:write x " "))
-           (io.stderr:write "\n"))
+    : log
     : env
     })
   (var sout "")
@@ -50,11 +58,11 @@
                 seval (fennel.eval script {:env public-env})]
             (if seval
               (set sout (.. sout seval))
-              (io.stderr:write "Error: failed to evaluate pre-processor expressions" script "\n"))
+              (error "failed to evaluate pre-processor expressions" script))
             (set spos (+ 1 (string.find st ">" tagidx)))
             (set within-prepro-tags? false))
           (do
-            (io.stderr:write "Warning: preprocessor tag not closed before end of file.\n")
+            (warning "preprocessor tag not closed before end of file.")
             (set sout
                  (.. sout (string.sub st spos slen)))
             (set spos slen))))
